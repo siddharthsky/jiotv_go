@@ -22,7 +22,18 @@ go.work
 
 # Credential file
 credentials.json
+jiotv_credentials.json
+jiotv_credentials_v2.json
 .jiotv_go
 
 # Playlist .m3u file
 *.m3u
+
+# Node
+node_modules/
+
+# Logs
+jiotv_go.log
+
+# EPG
+epg.xml.gz

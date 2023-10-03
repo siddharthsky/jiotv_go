@@ -1,11 +1,9 @@
 name: JioTV Go Docker Build
 
 on:
-#   schedule:
-#     - cron: "0 10 * * *"
   push:
     branches:
-      - "**"
+      - "main"
     tags:
       - "v*.*"
     paths-ignore:
@@ -15,9 +13,18 @@ on:
       - "run_server.bat"
       - "assets/**"
       - "docs/**"
-  pull_request:
-    branches:
-      - "main"
+      - "**.sh"
+      - "**.md"
+      - ".github/workflows/dependabot_action.yml"
+      - ".github/workflows/pre-release.yml"
+      - ".github/workflows/test-build.yml"
+      - ".github/workflows/docker.yml"
+      - ".github/dependabot.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   docker:
@@ -65,7 +72,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64, linux/arm64, linux/arm, linux/386
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -2,29 +2,46 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
+	"os"
 	"regexp"
-	"strings"
 	"strconv"
-	"github.com/gin-gonic/gin"
-	"github.com/rabilrbl/jiotv_go/internals/utils"
+	"strings"
+	"time"
+
 	"github.com/rabilrbl/jiotv_go/internals/television"
+	"github.com/rabilrbl/jiotv_go/internals/utils"
+	"github.com/valyala/fasthttp"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/proxy"
 )
 
-var TV *television.Television
+var (
+	TV               *television.Television
+	DisableTSHandler bool
+)
 
-func Init() {
-	credentials, err := utils.GetLoginCredentials()
+func InitLogin() {
+	DisableTSHandler = os.Getenv("JIOTV_DISABLE_TS_HANDLER") == "true"
+	if DisableTSHandler {
+		utils.Log.Println("TS Handler disabled!. All TS video requests will be served directly from JioTV servers.")
+	}
+	credentials, err := utils.GetJIOTVCredentials()
 	if err != nil {
-		utils.Log.Println("Login error!")
+		utils.Log.Println("Login error!", err)
 	} else {
-		TV = television.NewTelevision(credentials["ssoToken"], credentials["crm"], credentials["uniqueId"])	
+		if credentials.AccessToken != "" {
+			// Check validity of credentials
+			go RefreshTokenIfExpired(credentials)
+		}
+		TV = television.NewTelevision(credentials)
 	}
 }
 
-func IndexHandler(c *gin.Context) {
+func IndexHandler(c *fiber.Ctx) error {
 	channels := television.Channels()
 
 	language := c.Query("language")
@@ -39,100 +56,136 @@ func IndexHandler(c *gin.Context) {
 		language_int, _ := strconv.Atoi(language)
 		category_int, _ := strconv.Atoi(category)
 		channels_list := television.FilterChannels(channels.Result, language_int, category_int)
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Channels": channels_list,
+		return c.Render("views/index", fiber.Map{
+			"Channels":      channels_list,
 			"IsNotLoggedIn": !utils.CheckLoggedIn(),
-			"Categories": categoryMap,
-			"Languages": languageMap,
+			"Categories":    categoryMap,
+			"Languages":     languageMap,
+			"Qualities": map[string]string{
+				"auto":   "Quality (Auto)",
+				"high":   "High",
+				"medium": "Medium",
+				"low":    "Low",
+			},
 		})
-	} else  {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Channels": channels.Result,
+	} else {
+		return c.Render("views/index", fiber.Map{
+			"Channels":      channels.Result,
 			"IsNotLoggedIn": !utils.CheckLoggedIn(),
-			"Categories": categoryMap,
-			"Languages": languageMap,
+			"Categories":    categoryMap,
+			"Languages":     languageMap,
+			"Qualities": map[string]string{
+				"auto":   "Quality (Auto)",
+				"high":   "High",
+				"medium": "Medium",
+				"low":    "Low",
+			},
 		})
 	}
 }
 
-func checkFieldExist(field string, check bool, c *gin.Context) {
+func checkFieldExist(field string, check bool, c *fiber.Ctx) {
 	if !check {
-		utils.Log.Println(field+" not provided")	
-		c.JSON(400, gin.H{
-			"message": field+" not provided",
+		utils.Log.Println(field + " not provided")
+		c.Status(fiber.StatusBadRequest)
+		c.JSON(fiber.Map{
+			"message": field + " not provided",
 		})
 	}
 }
 
-func LoginHandler(c *gin.Context) {
-	var username, password string
-	var check bool
-	if (c.Request.Method == "GET") {
-		username, check = c.GetQuery("username")
-		checkFieldExist("Username", check, c)
-		password, check = c.GetQuery("password")
-		checkFieldExist("Password", check, c)
-	} else if (c.Request.Method == "POST") {
-		var json map[string]string
-		err := c.BindJSON(&json)
-		if err != nil {
-			utils.Log.Println(err)
-			c.JSON(400, gin.H{
-				"message": "Invalid JSON",
-			})
-			return
-		}
-		username = json["username"]
-		checkFieldExist("Username", username != "", c)
-		password = json["password"]
-		checkFieldExist("Password", password != "", c)
-	}
-	
-	result, err := utils.Login(username, password)
+func LiveHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// remove suffix .m3u8 if exists
+	id = strings.Replace(id, ".m3u8", "", 1)
+	liveResult, err := TV.Live(id)
 	if err != nil {
 		utils.Log.Println(err)
-		c.JSON(500, gin.H{
-			"message": "Internal server error",
-		})
-		return
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": err,
+			})
+		}
 	}
-	Init()
-	c.JSON(200, result)
-
-}
-
-func LiveHandler(c *gin.Context) {
-	id := c.Param("id")
-	// remove suffix .m3u8 if exists
-	id = strings.Replace(id, ".m3u8", "", -1)
-	liveResult := TV.Live(id)
 	// quote url
-	coded_url := url.QueryEscape(liveResult)
-	c.Redirect(302, "/render?auth="+coded_url+"&channel_key_id="+id)
+	coded_url := url.QueryEscape(liveResult.Auto)
+	return c.Redirect("/render.m3u8?auth="+coded_url+"&channel_key_id="+id, fiber.StatusFound)
 }
 
-func RenderHandler(c *gin.Context) {
-	auth, check := c.GetQuery("auth")
-	if !check {
+func LiveHighHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// remove suffix .m3u8 if exists
+	id = strings.Replace(id, ".m3u8", "", 1)
+	liveResult, err := TV.Live(id)
+	if err != nil {
+		utils.Log.Println(err)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": err,
+			})
+		}
+	}
+	// quote url
+	coded_url := url.QueryEscape(liveResult.High)
+	return c.Redirect("/render.m3u8?auth="+coded_url+"&channel_key_id="+id, fiber.StatusFound)
+}
+
+func LiveMediumHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// remove suffix .m3u8 if exists
+	id = strings.Replace(id, ".m3u8", "", 1)
+	liveResult, err := TV.Live(id)
+	if err != nil {
+		utils.Log.Println(err)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": err,
+			})
+		}
+	}
+	// quote url
+	coded_url := url.QueryEscape(liveResult.Medium)
+	return c.Redirect("/render.m3u8?auth="+coded_url+"&channel_key_id="+id, fiber.StatusFound)
+}
+
+func LiveLowHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// remove suffix .m3u8 if exists
+	id = strings.Replace(id, ".m3u8", "", 1)
+	liveResult, err := TV.Live(id)
+	if err != nil {
+		utils.Log.Println(err)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": err,
+			})
+		}
+	}
+	// quote url
+	coded_url := url.QueryEscape(liveResult.Low)
+	return c.Redirect("/render.m3u8?auth="+coded_url+"&channel_key_id="+id, fiber.StatusFound)
+}
+
+func RenderHandler(c *fiber.Ctx) error {
+	auth := c.Query("auth")
+	if auth == "" {
 		utils.Log.Println("Auth not provided")
-		c.JSON(400, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Auth not provided",
 		})
-		return
 	}
-	channel_id, check := c.GetQuery("channel_key_id")
-	if !check {
+	channel_id := c.Query("channel_key_id")
+	if channel_id == "" {
 		utils.Log.Println("Channel ID not provided")
-		c.JSON(400, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Channel ID not provided",
 		})
-		return
 	}
 	// unquote url
 	decoded_url, err := url.QueryUnescape(auth)
 	if err != nil {
 		utils.Log.Println(err)
-		return
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	renderResult := TV.Render(decoded_url)
 	// baseUrl is the part of the url excluding suffix file.m3u8 and params is the part of the url after the suffix
@@ -146,9 +199,12 @@ func RenderHandler(c *gin.Context) {
 	replacer := func(match []byte) []byte {
 		switch {
 		case bytes.HasSuffix(match, []byte(".m3u8")):
-			return []byte("/render?auth=" + url.QueryEscape(baseUrl + string(match) + "?" + params) + "&channel_key_id=" + channel_id)
+			return []byte("/render.m3u8?auth=" + url.QueryEscape(baseUrl+string(match)+"?"+params) + "&channel_key_id=" + channel_id)
 		case bytes.HasSuffix(match, []byte(".ts")):
-			return []byte(baseUrl + string(match) + "?" + params)
+			if DisableTSHandler {
+				return []byte(baseUrl + string(match) + "?" + params)
+			}
+			return []byte("/render.ts?auth=" + url.QueryEscape(baseUrl+string(match)+"?"+params))
 		default:
 			return match
 		}
@@ -161,7 +217,7 @@ func RenderHandler(c *gin.Context) {
 	replacer_key := func(match []byte) []byte {
 		switch {
 		case bytes.HasSuffix(match, []byte(".key")) || bytes.HasSuffix(match, []byte(".pkey")):
-			return []byte("/renderKey?auth=" + url.QueryEscape((string(match))) + "&channel_key_id=" + channel_id)
+			return []byte("/render.key?auth=" + url.QueryEscape(string(match)+"?"+params) + "&channel_key_id=" + channel_id)
 		default:
 			return match
 		}
@@ -171,81 +227,314 @@ func RenderHandler(c *gin.Context) {
 	re_key := regexp.MustCompile(pattern_key)
 	renderResult = re_key.ReplaceAllFunc(renderResult, replacer_key)
 
-	c.Data(200, "application/vnd.apple.mpegurl", renderResult)
+	return c.Send(renderResult)
 }
 
-func RenderKeyHandler(c *gin.Context) {
-	channel_id, _ := c.GetQuery("channel_key_id")
-	auth, _ := c.GetQuery("auth")
+func RenderKeyHandler(c *fiber.Ctx) error {
+	channel_id := c.Query("channel_key_id")
+	auth := c.Query("auth")
 	// decode url
 	decoded_url, err := url.QueryUnescape(auth)
 	if err != nil {
 		utils.Log.Println(err)
-		return
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	keyResult, status := TV.RenderKey(decoded_url, channel_id)
-	c.Data(status, "application/octet-stream", keyResult)
+	return c.Status(status).Send(keyResult)
 }
 
-func ChannelsHandler(c *gin.Context) {
+func RenderTSHandler(c *fiber.Ctx) error {
+	auth := c.Query("auth")
+	// decode url
+	decoded_url, err := url.QueryUnescape(auth)
+	if err != nil {
+		utils.Log.Panicln(err)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	if err := proxy.Do(c, decoded_url, TV.Client); err != nil {
+		return err
+	}
+	c.Response().Header.Del(fiber.HeaderServer)
+	return nil
+}
+
+func ChannelsHandler(c *fiber.Ctx) error {
+	quality := strings.TrimSpace(c.Query("q"))
 	apiResponse := television.Channels()
 	// hostUrl should be request URL like http://localhost:5001
-	hostURL :=  strings.ToLower(c.Request.Proto[0:strings.Index(c.Request.Proto, "/")]) + "://" + c.Request.Host
+	hostURL := strings.ToLower(c.Protocol()) + "://" + c.Hostname()
 
 	// Check if the query parameter "type" is set to "m3u"
 	if c.Query("type") == "m3u" {
 		// Create an M3U playlist
-		m3uContent := "#EXTM3U\n"
-		logoURL := "https://jiotv.catchup.cdn.jio.com/dare_images/images"
+		m3uContent := "#EXTM3U x-tvg-url=\"" + hostURL + "/epg.xml.gz\"\n"
+		logoURL := hostURL + "/jtvimage"
 		for _, channel := range apiResponse.Result {
-			channelURL := fmt.Sprintf("%s/live/%d.m3u8", hostURL, channel.ID)
+			var channelURL string
+			if quality != "" {
+				channelURL = fmt.Sprintf("%s/live/%s/%d.m3u8", hostURL, quality, channel.ID)
+			} else {
+				channelURL = fmt.Sprintf("%s/live/%d.m3u8", hostURL, channel.ID)
+			}
 			channelLogoURL := fmt.Sprintf("%s/%s", logoURL, channel.LogoURL)
-			m3uContent += fmt.Sprintf("#EXTINF:-1 tvg-name=\"%s\" tvg-logo=\"%s\" tvg-language=\"%s\" tvg-type=\"%s\" group-title=\"%s\", %s\n%s\n",
-				channel.Name, channelLogoURL, television.LanguageMap[channel.Language], television.CategoryMap[channel.Category], television.CategoryMap[channel.Category], channel.Name, channelURL)
+			m3uContent += fmt.Sprintf("#EXTINF:-1 tvg-id=%d tvg-name=%q tvg-logo=%q tvg-language=%q tvg-type=%q group-title=%q, %s\n%s\n",
+				channel.ID, channel.Name, channelLogoURL, television.LanguageMap[channel.Language], television.CategoryMap[channel.Category], television.CategoryMap[channel.Category], channel.Name, channelURL)
 		}
 
 		// Set the Content-Disposition header for file download
-		c.Header("Content-Disposition", "attachment; filename=jiotv_playlist.m3u")
-		c.Header("Content-Type", "application/vnd.apple.mpegurl") // Set the video M3U MIME type
-		c.String(http.StatusOK, m3uContent)
-		return
+		c.Set("Content-Disposition", "attachment; filename=jiotv_playlist.m3u")
+		c.Set("Content-Type", "application/vnd.apple.mpegurl") // Set the video M3U MIME type
+		return c.SendString(m3uContent)
 	}
 
 	for i, channel := range apiResponse.Result {
 		apiResponse.Result[i].URL = fmt.Sprintf("%s/live/%d", hostURL, channel.ID)
 	}
 
-	c.JSON(http.StatusOK, apiResponse)
+	return c.JSON(apiResponse)
 }
 
-func PlayHandler(c *gin.Context) {
-	id := c.Param("id")
-	player_url := "/player/" + id
-	c.HTML(http.StatusOK, "play.html", gin.H{
+func PlayHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	quality := c.Query("q")
+	player_url := "/player/" + id + "?q=" + quality
+	return c.Render("views/play", fiber.Map{
 		"player_url": player_url,
 	})
 }
 
-func PlayerHandler(c *gin.Context) {
-	id := c.Param("id")
-	play_url := "/live/" + id + ".m3u8"
-	c.HTML(http.StatusOK, "flow_player.html", gin.H{
+func PlayerHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	quality := c.Query("q")
+	var play_url string
+	if quality != "" {
+		play_url = "/live/" + quality + "/" + id + ".m3u8"
+	} else {
+		play_url = "/live/" + id + ".m3u8"
+	}
+	return c.Render("views/flow_player", fiber.Map{
 		"play_url": play_url,
 	})
 }
 
-func ClapprHandler(c *gin.Context) {
-	id := c.Param("id")
-	play_url := "/live/" + id + ".m3u8"
-	c.HTML(http.StatusOK, "clappr.html", gin.H{
+func ClapprHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	quality := c.Query("q")
+	var play_url string
+	if quality != "" {
+		play_url = "/live/" + quality + "/" + id + ".m3u8"
+	} else {
+		play_url = "/live/" + id + ".m3u8"
+	}
+	return c.Render("views/clappr", fiber.Map{
 		"play_url": play_url,
 	})
 }
 
-func BlankHandler(c *gin.Context) {
-	c.String(http.StatusOK, "")
+func FaviconHandler(c *fiber.Ctx) error {
+	return c.Redirect("/static/favicon.ico", fiber.StatusMovedPermanently)
 }
 
-func FaviconHandler(c *gin.Context) {
-	c.Redirect(301, "/static/favicon.ico")
+func PlaylistHandler(c *fiber.Ctx) error {
+	quality := c.Query("q")
+	return c.Redirect("/channels?type=m3u&q="+quality, fiber.StatusMovedPermanently)
+}
+
+func ImageHandler(c *fiber.Ctx) error {
+	url := "http://jiotv.catchup.cdn.jio.com/dare_images/images/" + c.Params("file")
+	if err := proxy.Do(c, url, TV.Client); err != nil {
+		return err
+	}
+	c.Response().Header.Del(fiber.HeaderServer)
+	return nil
+}
+
+func LoginSendOTPHandler(c *fiber.Ctx) error {
+	// get mobile number from post request
+	formBody := new(LoginSendOTPRequestBodyData)
+	err := c.BodyParser(&formBody)
+	if err != nil {
+		utils.Log.Println(err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid JSON",
+		})
+	}
+	mobileNumber := formBody.MobileNumber
+	checkFieldExist("Mobile Number", mobileNumber != "", c)
+
+	result, err := utils.LoginSendOTP(mobileNumber)
+	if err != nil {
+		utils.Log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err,
+		})
+	}
+	return c.JSON(fiber.Map{
+		"status": result,
+	})
+}
+
+func LoginVerifyOTPHandler(c *fiber.Ctx) error {
+	// get mobile number and otp from post request
+	formBody := new(LoginVerifyOTPRequestBodyData)
+	err := c.BodyParser(&formBody)
+	if err != nil {
+		utils.Log.Println(err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid JSON",
+		})
+	}
+	mobileNumber := formBody.MobileNumber
+	checkFieldExist("Mobile Number", mobileNumber != "", c)
+	otp := formBody.OTP
+	checkFieldExist("OTP", otp != "", c)
+
+	result, err := utils.LoginVerifyOTP(mobileNumber, otp)
+	if err != nil {
+		utils.Log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal server error",
+		})
+	}
+	InitLogin()
+	return c.JSON(result)
+}
+
+func LoginHandler(c *fiber.Ctx) error {
+	var username, password string
+	if c.Method() == "GET" {
+		username = c.Query("username")
+		checkFieldExist("Username", username != "", c)
+		password = c.Query("password")
+		checkFieldExist("Password", password != "", c)
+	} else if c.Method() == "POST" {
+		formBody := new(LoginRequestBodyData)
+		err := c.BodyParser(&formBody)
+		if err != nil {
+			utils.Log.Println(err)
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"message": "Invalid JSON",
+			})
+		}
+		username = formBody.Username
+		checkFieldExist("Username", username != "", c)
+		password = formBody.Password
+		checkFieldExist("Password", password != "", c)
+	}
+
+	result, err := utils.Login(username, password)
+	if err != nil {
+		utils.Log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal server error",
+		})
+	}
+	InitLogin()
+	return c.JSON(result)
+}
+
+func EPGHandler(c *fiber.Ctx) error {
+	// if epg.xml.gz exists, return it
+	if _, err := os.Stat("epg.xml.gz"); err == nil {
+		return c.SendFile("epg.xml.gz", true)
+	} else {
+		err_message := "EPG not found. Please restart the server after setting the environment variable JIOTV_EPG to true."
+		fmt.Println(err_message)
+		return c.Status(fiber.StatusNotFound).SendString(err_message)
+	}
+}
+
+func LoginRefreshAccessToken() error {
+	utils.Log.Println("Refreshing AccessToken...")
+	tokenData, err := utils.GetJIOTVCredentials()
+	if err != nil {
+		return err
+	}
+
+	// Prepare the request body
+	requestBody := map[string]string{
+		"appName":      "RJIL_JioTV",
+		"deviceId":     "6fcadeb7b4b10d77",
+		"refreshToken": tokenData.RefreshToken,
+	}
+
+	requestBodyJSON, err := json.Marshal(requestBody)
+	if err != nil {
+		utils.Log.Fatalln(err)
+		return err
+	}
+
+	// Prepare the request
+	req := fasthttp.AcquireRequest()
+	req.SetRequestURI("https://auth.media.jio.com/tokenservice/apis/v1/refreshtoken?langId=6")
+	req.Header.SetMethod("POST")
+	req.Header.Set("devicetype", "phone")
+	req.Header.Set("versionCode", "315")
+	req.Header.Set("os", "android")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	req.Header.Set("Host", "auth.media.jio.com")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("User-Agent", "okhttp/4.2.2")
+	req.Header.Set("accessToken", tokenData.AccessToken)
+	req.SetBody(requestBodyJSON)
+
+	// Send the request
+	resp := fasthttp.AcquireResponse()
+	client := utils.GetRequestClient()
+	if err := client.Do(req, resp); err != nil {
+		utils.Log.Fatalln(err)
+		return err
+	}
+
+	// Check the response
+	if resp.StatusCode() != fasthttp.StatusOK {
+		utils.Log.Fatalln("Request failed with status code:", resp.StatusCode())
+		return fmt.Errorf("Request failed with status code: %d", resp.StatusCode())
+	}
+
+	// Parse the response body
+	respBody, err := resp.BodyGunzip()
+	if err != nil {
+		utils.Log.Fatalln(err)
+		return err
+	}
+	var response RefreshTokenResponse
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		utils.Log.Fatalln(err)
+		return err
+	}
+
+	// Update tokenData
+	if response.AccessToken != "" {
+		tokenData.AccessToken = response.AccessToken
+		tokenData.LastTokenRefreshTime = strconv.FormatInt(time.Now().Unix(), 10)
+		err := utils.WriteJIOTVCredentials(tokenData)
+		if err != nil {
+			utils.Log.Fatalln(err)
+			return err
+		}
+		TV = television.NewTelevision(tokenData)
+		go RefreshTokenIfExpired(tokenData)
+		return nil
+	} else {
+		return fmt.Errorf("AccessToken not found in response")
+	}
+}
+
+func RefreshTokenIfExpired(credentials *utils.JIOTV_CREDENTIALS) {
+	utils.Log.Println("Checking if AccessToken is expired...")
+	lastTokenRefreshTime, err := strconv.ParseInt(credentials.LastTokenRefreshTime, 10, 64)
+	if err != nil {
+		utils.Log.Fatal(err)
+	}
+	lastTokenRefreshTimeUnix := time.Unix(lastTokenRefreshTime, 0)
+	thresholdTime := lastTokenRefreshTimeUnix.Add(1*time.Hour + 50*time.Minute)
+
+	if thresholdTime.Before(time.Now()) {
+		LoginRefreshAccessToken()
+	} else {
+		utils.Log.Println("Refreshing AccessToken after", time.Until(thresholdTime).Truncate(time.Second))
+		go utils.ScheduleFunctionCall(func() { RefreshTokenIfExpired(credentials) }, thresholdTime)
+	}
 }

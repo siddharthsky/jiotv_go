@@ -1,37 +1,35 @@
-FROM golang:latest
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine AS builder
 
-# Set the Current Working Directory inside the container
-
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
+# Copy source files from the host computer to the container
+COPY go.mod ./
+COPY go.sum ./
+COPY cmd ./cmd
+COPY internals ./internals
 
-COPY . .
+# Build the Go app with optimizations
+RUN go build -ldflags="-s -w" -trimpath -o /app/jiotv_go ./cmd/jiotv_go
 
-ENV GIN_MODE=release
+# Stage 2: Create the final minimal image
+# skipcq: DOK-DL3007
+FROM alpine:latest
 
-# Download all the dependencies
+# Set the working directory inside the container
+WORKDIR /app
 
-RUN go mod download
+# Copy the built Go executable from the previous stage
+COPY --from=builder /app/jiotv_go .
 
-# Build the Go app
-
-RUN go build -o jiotv_go ./cmd/jiotv_go
-
-# Remove all files and folderes except the executable
-
-RUN find . -mindepth 1 -maxdepth 1 ! -name 'jiotv_go' ! -name '.jiotv_go' -exec rm -rf {} +
-
-# Set credentials path
+# Set environment variables
 ENV JIOTV_CREDENTIALS_PATH=secrets
 
 # Volume for credentials
 VOLUME /app/secrets
 
 # Expose port 5001 to the outside world
-
 EXPOSE 5001
 
 # Command to run the executable
-
 CMD ["./jiotv_go", ":5001"]
