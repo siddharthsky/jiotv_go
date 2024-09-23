@@ -209,6 +209,7 @@ func Channels() ChannelsResponse {
 
 	// disable sony channels temporarily
 	// apiResponse.Result = append(apiResponse.Result, SONY_CHANNELS_API...)
+	apiResponse.Result = append(apiResponse.Result, ZEE_CHANNELS_API...)
 
 	return apiResponse
 }
@@ -321,6 +322,29 @@ func getSLChannel(channelID string) (*LiveURLOutput, error) {
 		return result, nil
 	} else {
 		// If the channel is not available in the SONY_CHANNELS map, then return an error
+		return nil, fmt.Errorf("Channel not found")
+	}
+}
+
+func getZLChannel(channelID string) (*LiveURLOutput, error) {
+	// Check if the channel is available in the ZEE_CHANNELS map
+	if val, ok := ZEE_JIO_MAP[channelID]; ok {
+		// If the channel is available in the ZEE_CHANNELS map, then return the link
+		result := new(LiveURLOutput)
+
+		chu, err := base64.StdEncoding.DecodeString(ZEE_CHANNELS[val])
+		if err != nil {
+			utils.Log.Panic(err)
+			return nil, err
+		}
+
+		channel_url := string(chu)
+
+		result.Result = channel_url
+		result.Bitrates.Auto = channel_url
+		return result, nil
+	} else {
+		// If the channel is not available in the ZEE_CHANNELS map, then return an error
 		return nil, fmt.Errorf("Channel not found")
 	}
 }

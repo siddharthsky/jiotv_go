@@ -264,3 +264,222 @@ var SONY_CHANNELS_API = []Channel{
 		LogoURL:  "Sony_BBC_Earth_HD_English.png",
 	},
 }
+
+var ZEE_CHANNELS = map[string]string{
+	"zeetv":             "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L2RCZHdPaUdhUXZ5MFRBMXpPc2pWNncvbWFzdGVyLm0zdTg=",
+	"zeetvhd":           "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L0NyVGl2a0RFU1dxd3ZVajN6RkVZRUEvbWFzdGVyLm0zdTg=",
+	"zee_anmol":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2wxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_cinema":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_cinema_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_bollywood":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYm9sbHl3b29kMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_action":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYWN0aW9uMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_anmol_cinema":  "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2xjaW5lbWExL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_bharat":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlaGluZHVzdGFuMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_business":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYnVzaW5lc3MxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_salaam":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_marathi":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+	"zee_marathi_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaWhkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_talkies":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llczEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+	"zee_talkies_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llc2hkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_bangla":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_bangla_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhaGQxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_bangla_cinema": "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhY2luZW1hMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+	"zee_tamil":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFtaWwxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_cinemalu":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlY2luZW1hbHUxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+	"zee_kannada":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVla2FubmFkYTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+}
+
+var ZEE_JIO_MAP = map[string]string{
+	"zl1351": "zeetv",
+	"zl167":  "zeetvhd",
+	"zl473":  "zee_anmol",
+	"zl484":  "zee_cinema",
+	"zl165":  "zee_cinema_hd",
+	"zl487":  "zee_bollywood",
+	"zl488":  "zee_action",
+	"zl415":  "zee_anmol_cinema",
+	"zl652":  "zee_bharat",
+	"zl657":  "zee_business",
+	"zl728":  "zee_salaam",
+	"zl445":  "zee_marathi",
+	"zl1360": "zee_marathi_hd",
+	"zl153":  "zee_talkies",
+	"zl1358": "zee_talkies_hd",
+	"zl625":  "zee_bangla",
+	"zl1977": "zee_bangla_hd",
+	"zl685":  "zee_bangla_cinema",
+	"zl628":  "zee_tamil",
+	"zl413":  "zee_cinemalu",
+	"zl689":  "zee_kannada",
+}
+
+var ZEE_CHANNELS_API = []Channel{
+	{
+		ID:       "zl1351",
+		Name:     "ZL Zee TV",
+		Language: 1, // Hindi
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "Zee_TV.png",
+	},
+	{
+		ID:       "zl167",
+		Name:     "ZL Zee TV HD",
+		Language: 1, // Hindi
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "Zee_TV_HD.png",
+	},
+	{
+		ID:       "zl473",
+		Name:     "ZL Zee Anmol",
+		Language: 1, // Hindi
+		Category: 5, // Entertainment
+		IsHD:     false,
+		LogoURL:  "Zee_Anmol.png",
+	},
+	{
+		ID:       "zl484",
+		Name:     "ZL Zee Cinema",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Cinema.png",
+	},
+	{
+		ID:       "zl165",
+		Name:     "ZL Zee Cinema HD",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     true,
+		LogoURL:  "Zee_Cinema_HD.png",
+	},
+	{
+		ID:       "zl487",
+		Name:     "ZL Zee Bollywood",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Classic.png",
+	},
+	{
+		ID:       "zl488",
+		Name:     "ZL Zee Action",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Action.png",
+	},
+	{
+		ID:       "zl415",
+		Name:     "ZL Zee Anmol Cinema",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Anmol_Cinema.png",
+	},
+	{
+		ID:       "zl652",
+		Name:     "ZL Zee Bharat",
+		Language: 1,  // Hindi
+		Category: 12, // News
+		IsHD:     false,
+		LogoURL:  "Zee_SANGAM.png",
+	},
+	{
+		ID:       "zl657",
+		Name:     "ZL Zee Business",
+		Language: 1,  // Hindi
+		Category: 16, // Business
+		IsHD:     false,
+		LogoURL:  "Zee_Business.png",
+	},
+	{
+		ID:       "zl728",
+		Name:     "ZL Zee Salaam",
+		Language: 4,  // Urdu
+		Category: 12, // News
+		IsHD:     false,
+		LogoURL:  "Zee_Salaam.png",
+	},
+	{
+		ID:       "zl445",
+		Name:     "ZL Zee Marathi",
+		Language: 2, // Marathi
+		Category: 5, // Entertainment
+		IsHD:     false,
+		LogoURL:  "Zee_Marathi.png",
+	},
+	{
+		ID:       "zl1360",
+		Name:     "ZL Zee Marathi HD",
+		Language: 2, // Marathi
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "Zee_Marathi_HD.png",
+	},
+	{
+		ID:       "zl153",
+		Name:     "ZL Zee Talkies",
+		Language: 2, // Marathi
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Talkies.png",
+	},
+	{
+		ID:       "zl1358",
+		Name:     "ZL Zee Talkies HD",
+		Language: 2, // Marathi
+		Category: 6, // Movies
+		IsHD:     true,
+		LogoURL:  "Zee_Talkies_HD.png",
+	},
+	{
+		ID:       "zl625",
+		Name:     "ZL Zee Bangla",
+		Language: 5, // Bengali
+		Category: 5, // Entertainment
+		IsHD:     false,
+		LogoURL:  "Zee_Bangla.png",
+	},
+	{
+		ID:       "zl1977",
+		Name:     "ZL Zee Bangla HD",
+		Language: 5, // Bengali
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "Zee_Bangla_HD.png",
+	},
+	{
+		ID:       "zl685",
+		Name:     "ZL Zee Bangla Cinema",
+		Language: 5, // Bengali
+		Category: 6, // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Bangla_Cinema.png",
+	},
+	{
+		ID:       "zl628",
+		Name:     "ZL Zee Tamil",
+		Language: 8, // Tamil
+		Category: 5, // Entertainment
+		IsHD:     false,
+		LogoURL:  "Zee_Tamil.png",
+	},
+	{
+		ID:       "zl413",
+		Name:     "ZL Zee Cinemalu",
+		Language: 11, // Telugu
+		Category: 6,  // Movies
+		IsHD:     false,
+		LogoURL:  "Zee_Cinemalu.png",
+	},
+	{
+		ID:       "zl689",
+		Name:     "ZL Zee Kannada",
+		Language: 13, // Kannada
+		Category: 5,  // Entertainment
+		IsHD:     false,
+		LogoURL:  "Zee_Kannada.png",
+	},
+}

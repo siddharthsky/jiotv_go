@@ -152,6 +152,9 @@ func LiveHandler(c *fiber.Ctx) error {
 	if id[:2] == "sl" {
 		return sonyLivRedirect(c, liveResult)
 	}
+	if id[:2] == "zl" {
+		return zeeRedirect(c, liveResult)
+	}
 	// Check if liveResult.Bitrates.Auto is empty
 	if liveResult.Bitrates.Auto == "" {
 		error_message := "No stream found for channel id: " + id + "Status: " + liveResult.Message
@@ -189,6 +192,10 @@ func LiveQualityHandler(c *fiber.Ctx) error {
 	Bitrates := liveResult.Bitrates
 	if id[:2] == "sl" {
 		return sonyLivRedirect(c, liveResult)
+	}
+
+	if id[:2] == "zl" {
+		return zeeRedirect(c, liveResult)
 	}
 	// Channels with following IDs output audio only m3u8 when quality level is enforced
 	if id == "1349" || id == "1322" {
@@ -536,4 +543,13 @@ func sonyLivRedirect(c *fiber.Ctx, liveResult *television.LiveURLOutput) error {
 	// remove origin from url
 	return c.Redirect(cho_url.Path+"?"+cho_url.RawQuery, fiber.StatusFound)
 
+}
+
+// zeelivRedirect redirects to zee channels
+func zeeRedirect(c *fiber.Ctx, liveResult *television.LiveURLOutput) error {
+	// Get the full URL for the live stream
+	ch_url := liveResult.Bitrates.Auto
+
+	// Redirect to the full URL directly
+	return c.Redirect(ch_url, fiber.StatusFound)
 }
