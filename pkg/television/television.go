@@ -336,13 +336,18 @@ func getZLChannel(channelID string) (*LiveURLOutput, error) {
 		// If the channel is available in the ZEE_CHANNELS map, then return the link
 		result := new(LiveURLOutput)
 
-		chu, err := base64.StdEncoding.DecodeString(ZEE_CHANNELS[val])
-		if err != nil {
-			utils.Log.Panic(err)
-			return nil, err
-		}
+		// Uncomment the following line if the URL is not encoded
+		// channel_url := ZEE_CHANNELS[val]
 
-		channel_url := string(chu)
+		// Comment out the base64 decoding if the URL is not encoded
+		// chu, err := base64.StdEncoding.DecodeString(ZEE_CHANNELS[val])
+		// if err != nil {
+		// 	utils.Log.Panic(err)
+		// 	return nil, err
+		// }
+		// channel_url := string(chu)
+
+		channel_url := ZEE_CHANNELS[val] // Use this line if the URL is not encoded
 
 		result.Result = channel_url
 		result.Bitrates.Auto = channel_url
