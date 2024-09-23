@@ -265,31 +265,63 @@ var SONY_CHANNELS_API = []Channel{
 	},
 }
 
+// var ZEE_CHANNELS = map[string]string{
+// 	"zeetv":             "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L2RCZHdPaUdhUXZ5MFRBMXpPc2pWNncvbWFzdGVyLm0zdTg=",
+// 	"zeetvhd":           "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L0NyVGl2a0RFU1dxd3ZVajN6RkVZRUEvbWFzdGVyLm0zdTg=",
+// 	"zee_anmol":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2wxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_cinema":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_cinema_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_bollywood":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYm9sbHl3b29kMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_action":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYWN0aW9uMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_anmol_cinema":  "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2xjaW5lbWExL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_bharat":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlaGluZHVzdGFuMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_business":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYnVzaW5lc3MxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_salaam":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_marathi":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+// 	"zee_marathi_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaWhkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_talkies":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llczEvZGVmYXVsdC9tYXN0ZXIubTN1OA==",
+// 	"zee_talkies_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llc2hkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_bangla":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_bangla_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhaGQxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_bangla_cinema": "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhY2luZW1hMS9kZWZhdWx0L21hc3Rlci5tM3U4",
+// 	"zee_tamil":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFtaWwxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_cinemalu":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlY2luZW1hbHUxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
+// 	"zee_kannada":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVla2FubmFkYTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+// }
+
 var ZEE_CHANNELS = map[string]string{
-	"zeetv":             "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L2RCZHdPaUdhUXZ5MFRBMXpPc2pWNncvbWFzdGVyLm0zdTg=",
-	"zeetvhd":           "aHR0cHM6Ly9kYWkuZ29vZ2xlLmNvbS9saW5lYXIvaGxzL2V2ZW50L0NyVGl2a0RFU1dxd3ZVajN6RkVZRUEvbWFzdGVyLm0zdTg=",
-	"zee_anmol":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2wxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_cinema":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_cinema_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_bollywood":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYm9sbHl3b29kMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_action":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYWN0aW9uMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_anmol_cinema":  "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYW5tb2xjaW5lbWExL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_bharat":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlaGluZHVzdGFuMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_business":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYnVzaW5lc3MxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_salaam":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlc2FsYWFtMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_marathi":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
-	"zee_marathi_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlbWFyYXRoaWhkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_talkies":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llczEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
-	"zee_talkies_hd":    "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFsa2llc2hkMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_bangla":        "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_bangla_hd":     "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhaGQxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_bangla_cinema": "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlYmFuZ2xhY2luZW1hMS9kZWZhdWx0L21hc3Rlci5tM3U4",
-	"zee_tamil":         "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVldGFtaWwxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_cinemalu":      "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVlY2luZW1hbHUxL2RlZmF1bHQvbWFzdGVyLm0zdTg",
-	"zee_kannada":       "aHR0cHM6Ly9kMWc4d2dqdXJ6OHZpYS5jbG91ZGZyb250Lm5ldC9icGstdHYvWmVla2FubmFkYTEvZGVmYXVsdC9tYXN0ZXIubTN1OA",
+	"andtv":             "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Andtv1/default/master.m3u8",
+	"andtvhd":           "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Andtvhd1/default/master.m3u8",
+	"andpictures":       "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Andpictures1/default/master.m3u8",
+	"andpictureshd":     "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Andpictureshd1/default/master.m3u8",
+	"zeetv":             "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeetv1/default/master.m3u8",
+	"zeetvhd":           "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeetvhd1/default/master.m3u8",
+	"zee_anmol":         "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeeanmol1/default/master.m3u8",
+	"zee_cinema":        "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeecinema1/default/master.m3u8",
+	"zee_cinema_hd":     "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeecinemahd1/default/master.m3u8",
+	"zee_bollywood":     "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeebollywood1/default/master.m3u8",
+	"zee_action":        "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeeaction1/default/master.m3u8",
+	"zee_anmol_cinema":  "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeeanmolcinema1/default/master.m3u8",
+	"zee_bharat":        "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeehindustan1/default/master.m3u8",
+	"zee_business":      "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeebusiness1/default/master.m3u8",
+	"zee_salaam":        "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeesalaam1/default/master.m3u8",
+	"zee_marathi":       "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeemarathi1/default/master.m3u8",
+	"zee_marathi_hd":    "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeemarathihd1/default/master.m3u8",
+	"zee_talkies":       "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeetalkies1/default/master.m3u8",
+	"zee_talkies_hd":    "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeetalkieshd1/default/master.m3u8",
+	"zee_bangla":        "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeebangla1/default/master.m3u8",
+	"zee_bangla_hd":     "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeebanglahd1/default/master.m3u8",
+	"zee_bangla_cinema": "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeebanglacinema1/default/master.m3u8",
+	"zee_tamil":         "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeetamil1/default/master.m3u8",
+	"zee_cinemalu":      "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeecinemalu1/default/master.m3u8",
+	"zee_kannada":       "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Zeekannada1/default/master.m3u8",
 }
 
 var ZEE_JIO_MAP = map[string]string{
+	"zl2024": "andtv",
+	"zl472":  "andtvhd",
+	"zl1839": "andpictures",
+	"zl185":  "andpictureshd",
 	"zl1351": "zeetv",
 	"zl167":  "zeetvhd",
 	"zl473":  "zee_anmol",
@@ -314,6 +346,38 @@ var ZEE_JIO_MAP = map[string]string{
 }
 
 var ZEE_CHANNELS_API = []Channel{
+	{
+		ID:       "zl2024",
+		Name:     "ZL And TV",
+		Language: 1, // Hindi
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "And_TV.png",
+	},
+	{
+		ID:       "zl472",
+		Name:     "ZL And TV HD",
+		Language: 1, // Hindi
+		Category: 5, // Entertainment
+		IsHD:     true,
+		LogoURL:  "And_TV_HD.png",
+	},
+	{
+		ID:       "zl1839",
+		Name:     "ZL And Pictures",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     true,
+		LogoURL:  "And_Pictures.png",
+	},
+	{
+		ID:       "zl185",
+		Name:     "ZL And Pictures HD",
+		Language: 1, // Hindi
+		Category: 6, // Movies
+		IsHD:     true,
+		LogoURL:  "And_Pictures_HD.png",
+	},
 	{
 		ID:       "zl1351",
 		Name:     "ZL Zee TV",
