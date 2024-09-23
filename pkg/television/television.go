@@ -70,6 +70,10 @@ func (tv *Television) Live(channelID string) (*LiveURLOutput, error) {
 		return getSLChannel(channelID)
 	}
 
+	if channelID[:2] == "zl" {
+		return getZLChannel(channelID)
+	}
+
 	formData := fasthttp.AcquireArgs()
 	defer fasthttp.ReleaseArgs(formData)
 
