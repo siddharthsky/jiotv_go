@@ -55,6 +55,7 @@ for var in $(go tool dist list); do
     esac
 done
 
+
 # Build for android5 arm with CC=armv7a-linux-androideabi21-clang
 echo "Building android5 arm"
 CGO_ENABLED=1 GOEXPERIMENT=jsonv2,greenteagc GOOS=android GOARCH=arm GOARM=7 CC="armv7a-linux-androideabi21-clang" CXX="armv7a-linux-androideabi21-clang++" go build -o bin/jiotv_go-android5-armv7 -trimpath -ldflags="-s -w" .
