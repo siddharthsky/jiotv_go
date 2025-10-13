@@ -3,7 +3,7 @@ name: "Build and Release"
 on:
   push:
     branches:
-      - main
+      - develop
     paths-ignore:
       - ".github/**"
       - "README.md"
